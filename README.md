@@ -2,6 +2,34 @@
 
 This a test project, using GraphQL, Sangria and Neo4j, for posting questions and answers by users
 
+Schema used:
+
+```
+type Query {
+	users:[User]!
+	user(id: Int!):User!
+	questions:[Question]!
+	question(text:String!):Question!
+}
+
+type User {
+	id: Int!
+	name: String!
+}
+
+type Question {
+	text: String!
+	answer: String!
+	postedBy: Int!
+	createdAt: LocalDateTime!
+}
+
+type Mutation {
+	createUser(id: Int!, name: String!): User!
+	createQuestion(text: String!, answer: String!, postedBy: Int!, createdAt: LocalDateTime!): Question!
+}
+```
+
 You can create `users` by using mutation 
 
 ```
