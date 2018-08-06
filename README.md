@@ -1,6 +1,6 @@
 # QuestionAnswers
 
-This a test project for posting questions and answers by users
+This a test project, using GraphQL, Sangria and Neo4j, for posting questions and answers by users
 
 You can create `users` by using mutation 
 
