@@ -17,7 +17,7 @@ You can create `questions` by using mutation
 
 ```
 mutation createQ{
-  createQuestion(text:"what is this3?", answer: "this is testing3", postedBy: 1){
+  createQuestion(text:"what is this?", answer: "this is testing", postedBy: 1){
   	text
     answer
     postedBy
