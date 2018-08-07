@@ -11,7 +11,7 @@ import sangria.schema.{Field, ObjectType, Schema, _}
 object GraphQLSchema {
 
   implicit val hasQuextionText: HasId[Question, String] = HasId(_.text)
-  implicit val hasUserId: HasId[User, Int] = HasId(_.id)
+  implicit val hasUserId: HasId[User, Int] = HasId(_.userId)
 
   implicit val GraphQLDateTime = ScalarType[LocalDateTime](
     "DateTime",
@@ -39,10 +39,10 @@ object GraphQLSchema {
   val userType = ObjectType[ApplicationContext, User](
     "User",
     fields[ApplicationContext, User](
-      Field("id", IntType, resolve = _.value.id),
+      Field("userId", IntType, resolve = _.value.userId),
       Field("name", StringType, resolve = _.value.name),
-      Field("questions", ListType(questionType), resolve = c => questionsFetcher.deferRelSeq(questionByUserRel, c.value.id)),
-      Field("lastQuestion", questionType, resolve = c => c.ctx.dao.getLatestQustionByUserId(c.value.id))
+      Field("questions", ListType(questionType), resolve = c => questionsFetcher.deferRelSeq(questionByUserRel, c.value.userId)),
+      Field("lastQuestion", questionType, resolve = c => c.ctx.dao.getLatestQustionByUserId(c.value.userId))
     )
   )
 
@@ -60,7 +60,7 @@ object GraphQLSchema {
     "Query",
     fields[ApplicationContext, Unit](
       Field("users", ListType(userType), resolve = c => c.ctx.dao.getAllUsers()),
-      Field("user", OptionType(userType), arguments = List(Argument("id", IntType)), resolve = c => usersFetcher.deferOpt(c.arg[Int]("id"))),
+      Field("user", OptionType(userType), arguments = List(Argument("userId", IntType)), resolve = c => usersFetcher.deferOpt(c.arg[Int]("userId"))),
       Field("questions", ListType(questionType), resolve = c => c.ctx.dao.getAllQuestions()),
       Field("question", OptionType(questionType), arguments = List(Argument("text", StringType)), resolve = c => questionsFetcher.deferOpt(c.arg[String]("text"))),
     )
@@ -69,7 +69,7 @@ object GraphQLSchema {
   val mutation = ObjectType(
     "mutation",
     fields[ApplicationContext, Unit](
-      Field("createUser", userType, arguments = List(Argument("id", IntType),Argument("name", StringType)), resolve = c => c.ctx.dao.createUser(c.arg[Int]("id"), c.arg[String]("name"))),
+      Field("createUser", userType, arguments = List(Argument("userId", IntType),Argument("name", StringType)), resolve = c => c.ctx.dao.createUser(c.arg[Int]("userId"), c.arg[String]("name"))),
       Field("createQuestion", questionType, arguments = List(Argument("text", StringType),Argument("answer", StringType),Argument("postedBy", IntType)), resolve = c => c.ctx.dao.createQuestion(c.arg[String]("text"), c.arg[String]("answer"), c.arg[Int]("postedBy")))
     )
   )
