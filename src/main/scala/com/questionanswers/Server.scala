@@ -1,14 +1,18 @@
 package com.questionanswers
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
+import akka.stream.actor.{ActorPublisher, ActorSubscriber}
+import akka.stream.scaladsl.{Sink, Source}
 import com.typesafe.config.ConfigFactory
 import spray.json._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import com.questionanswers.models.Question
+import sangria.execution.Executor
 
 import scala.concurrent.Await
 import scala.language.postfixOps
@@ -24,6 +28,17 @@ object Server extends App {
   implicit val materializer = ActorMaterializer()
 
   import actorSystem.dispatcher
+
+  val questionSubscriber =actorSystem.actorOf(Props[QuestionEventSubscriber])
+  val questionEventSubscriber = Sink.fromSubscriber(ActorSubscriber[Question](questionSubscriber))
+
+  val questionEventPublisher = actorSystem.actorOf(Props[QuestionEventPublisher])
+  val questionEventStorePublisher = Source.fromPublisher(ActorPublisher[Question](questionEventPublisher)).runWith(Sink.asPublisher(fanout = true))
+
+  val executor = Executor(GraphQLSchema.schema, deferredResolver = GraphQLSchema.Resolver)
+
+  val dao = DBSchema.createDatabase(config)
+  val ctx = ApplicationContext(dao, questionSubscriber, questionEventPublisher, questionEventStorePublisher)
 
   import scala.concurrent.duration._
 

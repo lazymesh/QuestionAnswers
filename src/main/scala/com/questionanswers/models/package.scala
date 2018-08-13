@@ -2,6 +2,7 @@ package com.questionanswers
 
 import java.time.LocalDateTime
 
+import sangria.execution.UserFacingError
 import sangria.validation.Violation
 
 package object models {
@@ -13,5 +14,7 @@ package object models {
   case object DateTimeCoerceViolation extends Violation {
     override def errorMessage: String = "Error during parsing DateTime"
   }
+
+  case class MutationError(message: String) extends Exception(message) with UserFacingError
 
 }
