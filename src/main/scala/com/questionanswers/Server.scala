@@ -11,7 +11,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import com.typesafe.config.ConfigFactory
 import spray.json._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import com.questionanswers.models.Question
+import com.questionanswers.models.{Events}
 import sangria.execution.Executor
 
 import scala.concurrent.Await
@@ -29,16 +29,18 @@ object Server extends App {
 
   import actorSystem.dispatcher
 
-  val questionSubscriber =actorSystem.actorOf(Props[QuestionEventSubscriber])
-  val questionEventSubscriber = Sink.fromSubscriber(ActorSubscriber[Question](questionSubscriber))
+  val subscriber =actorSystem.actorOf(Props[EventSubscriber])
+  val eventSubscriber = Sink.fromSubscriber(ActorSubscriber[Events](subscriber))
 
-  val questionEventPublisher = actorSystem.actorOf(Props[QuestionEventPublisher])
-  val questionEventStorePublisher = Source.fromPublisher(ActorPublisher[Question](questionEventPublisher)).runWith(Sink.asPublisher(fanout = true))
+  val eventPublisher = actorSystem.actorOf(Props[EventPublisher])
+  val evetStorePublisher = Source.fromPublisher(ActorPublisher[Events](eventPublisher)).runWith(Sink.asPublisher(fanout = true))
+
+  Source.fromPublisher(evetStorePublisher).collect{case event: Events ⇒ event}.to(eventSubscriber).run()
 
   val executor = Executor(GraphQLSchema.schema, deferredResolver = GraphQLSchema.Resolver)
 
   val dao = DBSchema.createDatabase(config)
-  val ctx = ApplicationContext(dao, questionSubscriber, questionEventPublisher, questionEventStorePublisher)
+  val ctx = ApplicationContext(dao, subscriber, eventPublisher, evetStorePublisher)
 
   import scala.concurrent.duration._
 

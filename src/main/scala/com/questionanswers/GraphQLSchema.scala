@@ -78,7 +78,7 @@ object GraphQLSchema {
     val mutation = ObjectType(
       "mutation",
       fields[ApplicationContext, Unit](
-        Field("createUser", userType, arguments = List(Argument("userId", IntType), Argument("name", StringType)), resolve = c => c.ctx.dao.createUser(c.arg[Int]("userId"), c.arg[String]("name"))),
+        Field("createUser", userType, arguments = List(Argument("userId", IntType), Argument("name", StringType)), resolve = c => c.ctx.createUser(c.arg[Int]("userId"), c.arg[String]("name"))),
         Field("createQuestion", questionType, arguments = List(Argument("text", StringType), Argument("answer", StringType), Argument("postedBy", IntType)), resolve = c => c.ctx.createQuestion(c.arg[String]("text"), c.arg[String]("answer"), c.arg[Int]("postedBy")))
       )
     )
@@ -86,12 +86,8 @@ object GraphQLSchema {
     val subscription = ObjectType(
       "subscription",
       fields[ApplicationContext, Unit](
-        Field.subs("questionCreated", questionType,
-          resolve = (c: Context[ApplicationContext, Unit]) =>
-            c.ctx.eventStream
-              .filter(event => questionType.valClass.isAssignableFrom(event.getClass))
-              .map(event => Action(event.asInstanceOf[Question]))
-        )
+        Field.subs("questionCreated", questionType, resolve = (c: Context[ApplicationContext, Unit]) => c.ctx.eventStream.filter(event => questionType.valClass.isAssignableFrom(event.getClass)).map(event => Action(event.asInstanceOf[Question]))),
+        Field.subs("userCreated", userType, resolve = (c: Context[ApplicationContext, Unit]) => c.ctx.eventStream.filter(event => userType.valClass.isAssignableFrom(event.getClass)).map(event => Action(event.asInstanceOf[User])))
       )
     )
     Schema(query, Some(mutation), Some(subscription))

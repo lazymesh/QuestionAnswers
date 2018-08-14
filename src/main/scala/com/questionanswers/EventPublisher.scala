@@ -2,29 +2,31 @@ package com.questionanswers
 
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{Cancel, Request}
-import com.questionanswers.models.Question
+import com.questionanswers.models.Events
 
-class QuestionEventPublisher extends ActorPublisher[Question] {
-  import QuestionEventPublisher._
+class EventPublisher extends ActorPublisher[Events] {
+  import EventPublisher._
 
-  // in-memory event storage
-  var events = Vector.empty[Question]
+  var events = Vector.empty[Events]
 
-  var eventBuffer = Vector.empty[Question]
+  var eventBuffer = Vector.empty[Events]
 
   def receive = {
     case AddEvent(event) =>
       addEvent(event)
       sender() ! EventAdded(event)
 
-    case Request(_) => deliverEvents()
-    case Cancel => context.stop(self)
+    case Request(_) => {
+      deliverEvents()
+    }
+    case Cancel => {
+      context.stop(self)
+    }
   }
 
-  def addEvent(event: Question) = {
+  def addEvent(event: Events) = {
     events  = events :+ event
     eventBuffer  = eventBuffer :+ event
-
     deliverEvents()
   }
 
@@ -39,10 +41,8 @@ class QuestionEventPublisher extends ActorPublisher[Question] {
   }
 }
 
-object QuestionEventPublisher {
-  case class AddEvent(event: Question)
+object EventPublisher {
+  case class AddEvent(event: Events)
 
-  case class EventAdded(event: Question)
-
-  val MaxBufferCapacity = 1000
+  case class EventAdded(event: Events)
 }
