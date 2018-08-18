@@ -1,33 +1,49 @@
 # QuestionAnswers
 
-This a test project, using GraphQL, Sangria and Neo4j, for posting questions and answers by users
+This a test project, using GraphQL, Sangria and Neo4j, for posting questions and answers by users. You can checkout the fron-end part of this project [questionasnwers-react-relay](https://github.com/lazymesh/questionasnwers-react-relay)
 
 Schema used:
 
 ```
-type Query {
-	users:[User]!
-	user(id: Int!):User!
-	questions:[Question]!
-	question(text:String!):Question!
+schema {
+  query: Query
+  mutation: mutation
+  subscription: subscription
 }
 
-type User {
-	id: Int!
-	name: String!
+scalar DateTime
+
+type mutation {
+  createUser(userId: Int!, name: String!): User!
+  createQuestion(text: String!, answer: String!, postedBy: Int!): Question!
+}
+
+type Query {
+  users: [User!]!
+  user(userId: Int!): User
+  questions: [Question!]!
+  question(text: String!): Question
 }
 
 type Question {
-	text: String!
-	answer: String!
-	postedBy: Int!
-	createdAt: LocalDateTime!
+  text: String!
+  answer: String!
+  postedBy: Int!
+  createdAt: DateTime!
 }
 
-type Mutation {
-	createUser(id: Int!, name: String!): User!
-	createQuestion(text: String!, answer: String!, postedBy: Int!, createdAt: LocalDateTime!): Question!
+type subscription {
+  questionCreated: Question!
+  userCreated: User!
 }
+
+type User {
+  userId: Int!
+  name: String!
+  questions: [Question!]!
+  lastQuestion: Question!
+}
+
 ```
 
 You can create `users` by using mutation 
