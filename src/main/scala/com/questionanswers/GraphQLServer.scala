@@ -35,7 +35,6 @@ object GraphQLServer {
 
         queryAst.operationType(operation) match {
           case Some(OperationType.Subscription) =>
-
             complete(executeSubscriptionGraphQLQuery(queryAst, operation, variables))
           case _ =>
             complete(executeGraphQLQuery(queryAst, operation, variables))
@@ -75,8 +74,10 @@ object GraphQLServer {
           operationName = operation
         ).map { preparedQuery =>
             ToResponseMarshallable(preparedQuery.execute()
-              .map(result =>
-                ServerSentEvent(result.compactPrint))
+              .map(result =>{
+                val resultString = result.compactPrint
+                ServerSentEvent(resultString.substring(8, resultString.length - 1))
+              })
               .recover{ case NonFatal(error) =>
                 println(error, "Unexpected error during event stream processing.")
                 ServerSentEvent(error.getMessage)

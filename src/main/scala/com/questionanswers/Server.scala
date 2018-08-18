@@ -8,11 +8,11 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.stream.actor.{ActorPublisher, ActorSubscriber}
 import akka.stream.scaladsl.{Sink, Source}
-import com.typesafe.config.ConfigFactory
-import spray.json._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import com.questionanswers.models.{Events}
+import com.questionanswers.models.Events
+import com.typesafe.config.ConfigFactory
 import sangria.execution.Executor
+import spray.json._
 
 import scala.concurrent.Await
 import scala.language.postfixOps
@@ -48,12 +48,13 @@ object Server extends App {
 
   val route: Route =
     (cors() & path("graphql")) {
-    entity(as[JsValue]) {
-      requestJson => GraphQLServer.endpoint(requestJson)
-    }
-  } ~ {
-    getFromResource("graphiql.html")
-  }
+      entity(as[JsValue]) {
+        requestJson => GraphQLServer.endpoint(requestJson)
+      }
+    } ~
+      cors() {
+        getFromResource("graphiql.html")
+      }
 
   Http().bindAndHandle(route, host, port)
   println(s"open a browser with URL: http://$host:$port")

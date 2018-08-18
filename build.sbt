@@ -22,6 +22,5 @@ libraryDependencies ++= Seq(
   "io.monix" %% "monix" % "3.0.0-RC1",
   //  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
 
-
   "org.scalatest" %% "scalatest" % "3.0.4" % Test
 )
