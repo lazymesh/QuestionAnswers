@@ -2,7 +2,7 @@
 
 This a test project, using GraphQL, Sangria and Neo4j, for posting questions and answers by users. You can checkout the fron-end part of this project [questionasnwers-react-relay](https://github.com/lazymesh/questionasnwers-react-relay)
 
-Schema used:
+Latest Schema with subscription and pagination:
 
 ```
 schema {
@@ -18,10 +18,18 @@ type mutation {
   createQuestion(text: String!, answer: String!, postedBy: Int!): Question!
 }
 
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String!
+  endCursor: String!
+}
+
 type Query {
   users: [User!]!
   user(userId: Int!): User
   questions: [Question!]!
+  pagedquestions(first: Int!, after: String): QuestionConnection
   question(text: String!): Question
 }
 
@@ -30,6 +38,18 @@ type Question {
   answer: String!
   postedBy: Int!
   createdAt: DateTime!
+  user: User
+}
+
+type QuestionConnection {
+  pageInfo: PageInfo!
+  edges: [QuestionEdge!]!
+  count: Int!
+}
+
+type QuestionEdge {
+  node: Question!
+  cursor: String!
 }
 
 type subscription {
@@ -44,6 +64,9 @@ type User {
   lastQuestion: Question!
 }
 
+type test {
+ id: ID!
+}
 ```
 
 You can create `users` by using mutation 
