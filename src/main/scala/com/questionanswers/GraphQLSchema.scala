@@ -46,7 +46,7 @@ object GraphQLSchema {
 
   val Resolver = DeferredResolver.fetchers(usersFetcher, questionsFetcher)
 
-  lazy val questionType: ObjectType[Unit, Question] = deriveObjectType[Unit, Question](
+  implicit lazy val questionType: ObjectType[Unit, Question] = deriveObjectType[Unit, Question](
     AddFields(
       Field("user", OptionType(userType), resolve = c => usersFetcher.deferRelOpt(userByQuestionRel, c.value.postedBy))
     )
@@ -59,7 +59,12 @@ object GraphQLSchema {
     )
   )
 
+  implicit val pageInfoType = deriveObjectType[Unit, PageInfo]()
+  implicit val questionEdgeType = deriveObjectType[Unit, QuestionEdge]()
+
   def schema(implicit ec: ExecutionContext, mat: Materializer) = {
+
+    val questionConnectionType = deriveObjectType[Unit, QuestionConnection]()
 
     val query = ObjectType(
       "Query",
@@ -67,6 +72,7 @@ object GraphQLSchema {
         Field("users", ListType(userType), resolve = c => c.ctx.dao.getAllUsers()),
         Field("user", OptionType(userType), arguments = List(Argument("userId", IntType)), resolve = c => usersFetcher.deferOpt(c.arg[Int]("userId"))),
         Field("questions", ListType(questionType), resolve = c => c.ctx.dao.getAllQuestions()),
+        Field("pagedquestions", OptionType(questionConnectionType), arguments = List(Argument("first", IntType), Argument("after", OptionInputType(StringType))), resolve = c => c.ctx.dao.getPagedQuestions(c.arg[Int]("first"), c.arg[String]("after"))),
         Field("question", OptionType(questionType), arguments = List(Argument("text", StringType)), resolve = c => questionsFetcher.deferOpt(c.arg[String]("text")))
       )
     )

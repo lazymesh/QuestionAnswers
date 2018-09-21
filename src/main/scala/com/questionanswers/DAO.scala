@@ -2,7 +2,7 @@ package com.questionanswers
 
 import java.time.{LocalDateTime, ZoneOffset}
 
-import com.questionanswers.models.{Question, User}
+import com.questionanswers.models._
 import org.neo4j.driver.v1.{Driver, Record}
 
 import scala.collection.JavaConverters._
@@ -45,6 +45,33 @@ class DAO(connection : Driver) {
       .runAsync(queryString)
       .thenCompose[java.util.List[Question]](c => c.listAsync[Question](r => Question(r.get("text").asString(), r.get("answer").asString(), r.get("postedBy").asInt(), r.get("createdAt").asLocalDateTime())))
       .thenApply[Seq[Question]]{ _.asScala }
+      .whenComplete((_, _) => session.closeAsync())
+
+    FutureConverters.toScala(completion)
+  }
+
+  def getPagedQuestions(limit: Int, after: String = "") ={
+    val session = connection.session()
+    val queryString = s"""match(n: Question) where n.text > "$after" return n.text as text, n.answer as answer, n.postedBy as postedBy, n.createdAt as createdAt order by n.text limit $limit"""
+    val hasMoreQuery = s"""match(n: Question) where n.text > "$after" return n.text as text order by n.text"""
+    val tempQueryList = session.run(hasMoreQuery).list()
+
+    val hasNextPage = if(tempQueryList.size > limit){
+      true
+    }
+    else{
+      false
+    }
+
+    val completion = session
+      .runAsync(queryString)
+      .thenCompose[java.util.List[Question]](c => c.listAsync[Question](r => Question(r.get("text").asString(), r.get("answer").asString(), r.get("postedBy").asInt(), r.get("createdAt").asLocalDateTime())))
+      .thenApply[QuestionConnection](x => {
+          val questions: Seq[Question] = x.asScala
+          val startCursor = questions.head.text
+          val endCursor = questions.last.text
+          QuestionConnection(PageInfo(hasNextPage, false, startCursor, endCursor), questions.map(question => QuestionEdge(question, question.text)), questions.size)
+        })
       .whenComplete((_, _) => session.closeAsync())
 
     FutureConverters.toScala(completion)
