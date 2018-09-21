@@ -13,6 +13,12 @@ package object models {
 
   case class User(userId: Int, name: String) extends Events
 
+  case class PageInfo(hasNextPage: Boolean, hasPreviousPage: Boolean, startCursor: String, endCursor: String)
+
+  case class QuestionEdge(node: Question, cursor: String)
+
+  case class QuestionConnection(pageInfo: PageInfo, edges: Seq[QuestionEdge], count: Int)
+
   case object DateTimeCoerceViolation extends Violation {
     override def errorMessage: String = "Error during parsing DateTime"
   }
